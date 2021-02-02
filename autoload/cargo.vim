@@ -1,8 +1,41 @@
+let s:run_buffer = -1
+let s:run_window = -1
+
 function! cargo#Load()
     " Utility call to get this script loaded, for debugging
 endfunction
 
 function! cargo#cmd(args) abort
+    if exists('g:cargo_shell_command_create_buffer')
+        let newbuf_cmd = g:cargo_shell_command_create_buffer
+    elseif has('terminal')
+        let newbuf_cmd = ''
+    elseif has('nvim')
+        let newbuf_cmd = 'noautocmd new'
+    else
+        let newbuf_cmd = '!'
+    endif
+    if exists('g:cargo_one_buffer')
+        " Kill existing buffer and create window if necessary
+        let l:buffer = winbufnr(s:run_window)
+        if l:buffer == -1
+            exe newbuf_cmd
+        else
+            exe s:run_window . "wincmd w"
+            if s:run_buffer == l:buffer
+                exe "enew"
+            endif
+        endif
+
+        if s:run_buffer != -1
+            exe "bd!".s:run_buffer
+        endif
+    else
+        exe newbuf_cmd
+    endif
+
+    let s:run_window = winnr()
+
     " Trim trailing spaces. This is necessary since :terminal command parses
     " trailing spaces as an empty argument.
     let args = substitute(a:args, '\s\+$', '', '')
@@ -11,11 +44,13 @@ function! cargo#cmd(args) abort
     elseif has('terminal')
         let cmd = 'terminal'
     elseif has('nvim')
-        let cmd = 'noautocmd new | terminal'
+        let cmd = 'terminal'
     else
         let cmd = '!'
     endif
-    execute cmd 'cargo' args
+    exe cmd 'cargo' args
+
+    let s:run_buffer = winbufnr(s:run_window)
 endfunction
 
 function! s:nearest_cargo(...) abort
@@ -89,7 +124,17 @@ function! cargo#init(args)
 endfunction
 
 function! cargo#run(args)
+    if s:run_buffer != 0 
+        execute "bd".s:run_buffer."!"
     call cargo#cmd("run " . a:args)
+    s:run_buffer = winnr()
+endfunction
+
+function! cargo#rerun(args)
+    if s:run_buffer != 0 
+        execute "bd".s:run_buffer."!"
+    call cargo#cmd("run " . a:args)
+    s:run_buffer = winnr()
 endfunction
 
 function! cargo#test(args)
