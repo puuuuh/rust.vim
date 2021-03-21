@@ -1,5 +1,5 @@
-let s:run_buffer = -1
-let s:run_window = -1
+let s:run_buffer = 0
+let s:run_window = 0
 
 function! cargo#Load()
     " Utility call to get this script loaded, for debugging
@@ -28,7 +28,7 @@ function! cargo#cmd(args) abort
         endif
 
         if s:run_buffer != -1
-            exe "bd!".s:run_buffer
+            exe "silent! bd!".s:run_buffer
         endif
     else
         exe newbuf_cmd
@@ -124,7 +124,10 @@ function! cargo#init(args)
 endfunction
 
 function! cargo#run(args)
+    if s:run_buffer != 0 
+        execute "bd".s:run_buffer."!"
     call cargo#cmd("run " . a:args)
+    s:run_buffer = winnr()
 endfunction
 
 function! cargo#rerun(args)
