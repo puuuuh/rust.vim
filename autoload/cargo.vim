@@ -1,5 +1,5 @@
-let s:run_buffer = 0
-let s:run_window = 0
+let s:run_buffer = -1
+let s:run_window = -1
 
 function! cargo#Load()
     " Utility call to get this script loaded, for debugging
@@ -124,14 +124,7 @@ function! cargo#init(args)
 endfunction
 
 function! cargo#run(args)
-    if s:run_buffer != 0 
-        execute "bd".s:run_buffer."!"
-    call cargo#cmd("run " . a:args)
-    s:run_buffer = winnr()
-endfunction
-
-function! cargo#rerun(args)
-    if s:run_buffer != 0 
+    if s:run_buffer != -1
         execute "bd".s:run_buffer."!"
     call cargo#cmd("run " . a:args)
     s:run_buffer = winnr()
