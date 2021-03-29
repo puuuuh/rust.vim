@@ -124,10 +124,7 @@ function! cargo#init(args)
 endfunction
 
 function! cargo#run(args)
-    if s:run_buffer != -1
-        execute "bd".s:run_buffer."!"
     call cargo#cmd("run " . a:args)
-    s:run_buffer = winnr()
 endfunction
 
 function! cargo#test(args)
